@@ -21,6 +21,7 @@ jobs:
     
     - name: Create release artifact
       run: |
+        cd build
         zip -r artifact.zip xmrig libxmrig-asm.a
 
     - name: Create a github-release on github
