@@ -1,0 +1,47 @@
+name: Build Ubuntu
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Build # https://xmrig.com/docs/miner/build/ubuntu
+      run: |
+        sudo apt-get install build-essential cmake libuv1-dev libssl-dev libhwloc-dev
+        mkdir build && cd build
+        cmake ..
+        make -j$(nproc)
+    
+    - name: Create release artifact
+      run: |
+        zip -r artifact.zip xmrig libxmrig-asm.a
+
+    - name: Create a github-release on github
+      id: create_github_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      with:
+        tag_name: xmrig-ubuntu
+        release_name: xmrig-ubuntu
+        body: ''
+        draft: false
+        prerelease: false
+
+    - name: Upload release package to github-release
+      id: upload-release-package 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_github_release.outputs.upload_url }}
+        asset_path: ./artifact.zip
+        asset_name: xmrig-ubuntu.zip
+        asset_content_type: application/zip
